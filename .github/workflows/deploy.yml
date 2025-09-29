@@ -1,0 +1,41 @@
+name: Deploy Hexo site
+
+on:
+  push:
+    branches:
+      - master   # 监听 master 分支的提交（你用的是 master，不是 main）
+
+jobs:
+  build-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'   # 推荐用 Node.js LTS 版本
+
+      - name: Cache node modules
+        uses: actions/cache@v3
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build static files
+        run: npx hexo generate
+
+      - name: Deploy to klgf_pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          external_repository: gitychzh/klgf_pages
+          publish_dir: ./public
+          publish_branch: master
